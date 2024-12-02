@@ -13,7 +13,7 @@ Automatically generate and enhance test coverage using AI-powered test generatio
 
 ## Usage
 
-Copy this [working example](https://github.com/qodo-ai/qodo-cover-example) or add the following to your workflow:
+Copy this [working example](https://github.com/qodo-ai/qodo-ci-example) or add the following to your workflow:
 
 ```yaml
 name: Run Qodo-Cover
@@ -37,7 +37,7 @@ jobs:
       ... # Set up your python test environment
 
       - name: qodo-cover
-        uses: qodo-ai/qodo-cover/.github/actions/qodo-cover@v0.1.1
+        uses: qodo-ai/qodo-ci/.github/actions/qodo-cover@v0.1.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           project_language: python

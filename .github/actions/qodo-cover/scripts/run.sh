@@ -64,7 +64,7 @@ gh pr diff "$PR_NUMBER" > /tmp/pr_diff.txt
 # Handle changes if any
 if [ -n "$(git status --porcelain)" ]; then
     TIMESTAMP=$(date +%s)
-    BRANCH_NAME="qodo-cover-${PR_NUMBER}-${TIMESTAMP}"
+    BRANCH_NAME="qodo-ci-${PR_NUMBER}-${TIMESTAMP}"
 
     if [ ! -f "$REPORT_PATH" ]; then
         echo "Error: Report file not found at $REPORT_PATH"
