@@ -1,5 +1,7 @@
 # Qodo Cover GitHub Action
 
+Currently in preview and available for free for a limited time for Python projects.
+
 Automatically generate and enhance test coverage using AI-powered test generation. Qodo Cover analyzes your existing test coverage and intelligently generates additional tests to improve coverage while ensuring high-quality, meaningful test cases.
 
 ## Features
