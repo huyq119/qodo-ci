@@ -65,7 +65,7 @@ REPO_ROOT=$(git rev-parse --show-toplevel)
 
 # Generate the modified files JSON using gh pr view, including only added or modified files
 echo "Generating modified files list..."
-gh pr view "$PR_NUMBER" --json files --jq '.files[] | select(.status == "added" or .status == "modified") | .path' | \
+gh pr view "$PR_NUMBER" --json files --jq '.files[].path' | \
 jq -R -s 'split("\n")[:-1] | map("'"$REPO_ROOT"'/" + .)' > "$MODIFIED_FILES_JSON"
 
 # Check if modified-files.json is empty
