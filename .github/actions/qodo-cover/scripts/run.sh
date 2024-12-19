@@ -29,6 +29,12 @@ if ! (command -v wget >/dev/null && command -v sqlite3 >/dev/null); then
     sudo apt-get install -y -qq wget sqlite3 libsqlite3-dev >/dev/null
 fi
 
+# Install jinja2-cli if not installed
+if ! pip show jinja2-cli >/dev/null; then
+    echo "Installing jinja2-cli..."
+    pip install jinja2-cli -q
+fi
+
 # Install jedi-language-server if project language is Python
 if [ "$PROJECT_LANGUAGE" == "python" ]; then
     if ! pip show jedi-language-server >/dev/null; then
