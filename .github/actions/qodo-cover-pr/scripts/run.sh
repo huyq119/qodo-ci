@@ -13,6 +13,7 @@ while [[ "$#" -gt 0 ]]; do
         --project-language) PROJECT_LANGUAGE="$2"; shift ;;
         --project-root) PROJECT_ROOT="$2"; shift ;;
         --code-coverage-report-path) CODE_COVERAGE_REPORT_PATH="$2"; shift ;;
+        --coverage-type) COVERAGE_TYPE="$2"; shift ;;
         --test-command) TEST_COMMAND="$2"; shift ;;
         --model) MODEL="$2"; shift ;;
         --max-iterations) MAX_ITERATIONS="$2"; shift ;;
@@ -80,6 +81,7 @@ fi
   --project-language "$PROJECT_LANGUAGE" \
   --project-root "$GITHUB_WORKSPACE/$PROJECT_ROOT" \
   --code-coverage-report-path "$GITHUB_WORKSPACE/$CODE_COVERAGE_REPORT_PATH" \
+  --coverage-type "$COVERAGE_TYPE" \
   --test-command "$TEST_COMMAND" \
   --model "$MODEL" \
   --max-iterations "$MAX_ITERATIONS" \
@@ -100,9 +102,9 @@ if [ -n "$(git status --porcelain)" ]; then
     REPORT_TEXT=$(cat "$REPORT_PATH")
     PR_BODY=$(jinja2 "$ACTION_PATH/templates/pr_body_template.j2" -D pr_number="$PR_NUMBER" -D report="$REPORT_TEXT")
     
+    git checkout -b "$BRANCH_NAME"
     git add .
     git commit -m "Add tests to improve coverage"
-    git checkout -b "$BRANCH_NAME"
     git push origin "$BRANCH_NAME"
     
     gh pr create \
