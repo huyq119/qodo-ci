@@ -102,9 +102,9 @@ if [ -n "$(git status --porcelain)" ]; then
     REPORT_TEXT=$(cat "$REPORT_PATH")
     PR_BODY=$(jinja2 "$ACTION_PATH/templates/pr_body_template.j2" -D pr_number="$PR_NUMBER" -D report="$REPORT_TEXT")
     
+    git checkout -b "$BRANCH_NAME"
     git add .
     git commit -m "Add tests to improve coverage"
-    git checkout -b "$BRANCH_NAME"
     git push origin "$BRANCH_NAME"
     
     gh pr create \
