@@ -18,6 +18,10 @@ inputs:
     description: "Path to the coverage.xml"
     required: false
     default: "./coverage.xml"
+  coverage_type:
+    description: "Type of coverage report, e.g. 'cobertura' or 'jacoco'."
+    required: false
+    default: "cobertura"
   test_command:
     description: "Command to run tests, e.g. 'pytest --cov=. --cov-report=xml --cov-report=term'"
     required: true
@@ -26,13 +30,13 @@ inputs:
     required: false
     default: "gpt-4o"
   max_iterations:
-    decription: "Maximum number test generation attempts per test file"
+    description: "Maximum number test generation attempts per test file"
     required: false
-    default: 3
+    default: "3"
   desired_coverage:
     description: "Desired coverage percentage"
     required: false
-    default: 100
+    default: "100"
 
 runs:
   using: "composite"
@@ -46,6 +50,7 @@ runs:
           --project-language "${{ inputs.project_language }}" \
           --project-root "${{ inputs.project_root }}" \
           --code-coverage-report-path "${{ inputs.code_coverage_report_path }}" \
+          --coverage-type "${{ inputs.coverage_type }}" \
           --test-command "${{ inputs.test_command }}" \
           --model "${{ inputs.model }}" \
           --max-iterations "${{ inputs.max_iterations }}" \
