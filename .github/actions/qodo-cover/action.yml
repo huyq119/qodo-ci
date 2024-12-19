@@ -37,6 +37,9 @@ inputs:
     description: "Desired coverage percentage"
     required: false
     default: "100"
+  branch:
+    description: "Branch to run on"
+    required: true
 
 runs:
   using: "composite"
@@ -45,8 +48,7 @@ runs:
     - name: Run script
       run: |
         ${{ github.action_path }}/scripts/run.sh \
-          --pr-number "${{ github.event.pull_request.number }}" \
-          --pr-ref "${{ github.event.pull_request.head.ref }}" \
+          --branch "${{ inputs.branch }}" \
           --project-language "${{ inputs.project_language }}" \
           --project-root "${{ inputs.project_root }}" \
           --code-coverage-report-path "${{ inputs.code_coverage_report_path }}" \
