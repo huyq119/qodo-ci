@@ -12,6 +12,7 @@ while [[ "$#" -gt 0 ]]; do
         --project-language) PROJECT_LANGUAGE="$2"; shift ;;
         --project-root) PROJECT_ROOT="$2"; shift ;;
         --code-coverage-report-path) CODE_COVERAGE_REPORT_PATH="$2"; shift ;;
+        --coverage-type) COVERAGE_TYPE="$2"; shift ;;
         --test-command) TEST_COMMAND="$2"; shift ;;
         --model) MODEL="$2"; shift ;;
         --max-iterations) MAX_ITERATIONS="$2"; shift ;;
@@ -55,6 +56,7 @@ gh pr diff "$PR_NUMBER" > /tmp/pr_diff.txt
   --project-language "$PROJECT_LANGUAGE" \
   --project-root "$GITHUB_WORKSPACE/$PROJECT_ROOT" \
   --code-coverage-report-path "$GITHUB_WORKSPACE/$CODE_COVERAGE_REPORT_PATH" \
+  --coverage-type "$COVERAGE_TYPE" \
   --test-command "$TEST_COMMAND" \
   --model "$MODEL" \
   --max-iterations "$MAX_ITERATIONS" \
