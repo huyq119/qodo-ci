@@ -30,19 +30,23 @@ if ! (command -v wget >/dev/null && command -v sqlite3 >/dev/null); then
     sudo apt-get install -y -qq wget sqlite3 libsqlite3-dev >/dev/null
 fi
 
-if ! pip show jedi-language-server >/dev/null; then
-    pip install jedi-language-server jinja2-cli -q
+# Install jedi-language-server if project language is Python
+if [ "$PROJECT_LANGUAGE" == "python" ]; then
+    if ! pip show jedi-language-server >/dev/null; then
+        echo "Installing jedi-language-server..."
+        pip install jedi-language-server -q
+    fi
 fi
 
-# Set up git
+# Set up Git configuration
 git config --global user.email "cover-bot@qodo.ai"
 git config --global user.name "Qodo Cover"
 
-# Download cover-agent if not cached
+# Download cover-agent-pro if not already downloaded
 if [ ! -f "$BINARY_PATH" ]; then
     echo "Downloading cover-agent-pro ${ACTION_REF}..."
     mkdir -p /tmp/bin
-    wget -q -P /tmp/bin https://github.com/qodo-ai/qodo-ci/releases/download/${ACTION_REF}/cover-agent-pro >/dev/null
+    wget -q -P /tmp/bin "https://github.com/qodo-ai/qodo-ci/releases/download/${ACTION_REF}/cover-agent-pro" >/dev/null
     chmod +x "$BINARY_PATH"
 fi
 
