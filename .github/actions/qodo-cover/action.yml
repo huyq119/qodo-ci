@@ -37,6 +37,10 @@ inputs:
     description: "Desired coverage percentage"
     required: false
     default: "100"
+  run_each_test_separately:
+    description: "Whether the agent should modify the test command to run individual tests"
+    required: false
+    default: "true"
   branch:
     description: "Branch to run on"
     required: true
@@ -57,6 +61,7 @@ runs:
           --model "${{ inputs.model }}" \
           --max-iterations "${{ inputs.max_iterations }}" \
           --desired-coverage "${{ inputs.desired_coverage }}" \
+          --run-each-test-separately "${{ inputs.run_each_test_separately }}" \
           --action-path "${{ github.action_path }}" \
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
