@@ -6,6 +6,8 @@ REPORT_DIR="/tmp"
 REPORT_PATH="$REPORT_DIR/report.txt"
 MODIFIED_FILES_JSON="/tmp/modified-files.json"
 
+DEBUG=${DEBUG:-false}
+
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --pr-number) PR_NUMBER="$2"; shift ;;
@@ -46,9 +48,30 @@ if [ "$PROJECT_LANGUAGE" == "python" ]; then
     fi
 fi
 
-# Set up Git configuration
-git config --global user.email "cover-bot@qodo.ai"
-git config --global user.name "Qodo Cover"
+# Skip git if in debug mode
+if ["$DEBUG" = "false"]; then
+    # Set up Git configuration
+    git config --global user.email "cover-bot@qodo.ai"
+    git config --global user.name "Qodo Cover"
+
+    # Checkout the PR branch
+    git fetch origin "$PR_REF"
+    git checkout "$PR_REF"
+
+    # Get the repository root
+    REPO_ROOT=$(git rev-parse --show-toplevel)
+
+    # Generate the modified files JSON using gh pr view, including only added or modified files
+    echo "Generating modified files list..."
+    gh pr view "$PR_NUMBER" --json files --jq '.files[].path' | \
+    jq -R -s 'split("\n")[:-1] | map("'"$REPO_ROOT"'/" + .)' > "$MODIFIED_FILES_JSON"
+fi
+
+# Check if modified-files.json is empty
+if [ ! -s "$MODIFIED_FILES_JSON" ]; then
+    echo "No added or modified files found in the PR. Exiting."
+    exit 0
+fi
 
 # Download cover-agent-pro if not already downloaded
 if [ ! -f "$BINARY_PATH" ]; then
@@ -56,24 +79,6 @@ if [ ! -f "$BINARY_PATH" ]; then
     mkdir -p /tmp/bin
     wget -q -P /tmp/bin "https://github.com/qodo-ai/qodo-ci/releases/download/${ACTION_REF}/cover-agent-pro" >/dev/null
     chmod +x "$BINARY_PATH"
-fi
-
-# Checkout the PR branch
-git fetch origin "$PR_REF"
-git checkout "$PR_REF"
-
-# Get the repository root
-REPO_ROOT=$(git rev-parse --show-toplevel)
-
-# Generate the modified files JSON using gh pr view, including only added or modified files
-echo "Generating modified files list..."
-gh pr view "$PR_NUMBER" --json files --jq '.files[].path' | \
-jq -R -s 'split("\n")[:-1] | map("'"$REPO_ROOT"'/" + .)' > "$MODIFIED_FILES_JSON"
-
-# Check if modified-files.json is empty
-if [ ! -s "$MODIFIED_FILES_JSON" ]; then
-    echo "No added or modified files found in the PR. Exiting."
-    exit 0
 fi
 
 # Run cover-agent-pro in pr mode with the provided arguments

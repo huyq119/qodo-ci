@@ -5,6 +5,8 @@ BINARY_PATH="/tmp/bin/cover-agent-pro"
 REPORT_DIR="/tmp"
 REPORT_PATH="$REPORT_DIR/report.txt"
 
+DEBUG=${DEBUG:-false}
+
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --branch) BRANCH="$2"; shift ;;
@@ -44,9 +46,16 @@ if [ "$PROJECT_LANGUAGE" == "python" ]; then
     fi
 fi
 
-# Set up Git configuration
-git config --global user.email "cover-bot@qodo.ai"
-git config --global user.name "Qodo Cover"
+# Skip git if in debug mode
+if ["$DEBUG" = "false"]; then
+    # Set up Git configuration
+    git config --global user.email "cover-bot@qodo.ai"
+    git config --global user.name "Qodo Cover"
+
+    # Checkout the specified branch
+    git fetch origin
+    git checkout "$BRANCH"  
+fi
 
 # Download cover-agent-pro if not already downloaded
 if [ ! -f "$BINARY_PATH" ]; then
@@ -56,9 +65,6 @@ if [ ! -f "$BINARY_PATH" ]; then
     chmod +x "$BINARY_PATH"
 fi
 
-# Checkout the specified branch
-git fetch origin
-git checkout "$BRANCH"
 
 # Run cover-agent-pro
 "$BINARY_PATH" \
@@ -73,27 +79,30 @@ git checkout "$BRANCH"
   --run-each-test-separately "$RUN_EACH_TEST_SEPARATELY" \
   --report-dir "$REPORT_DIR"
 
-# If new changes
-if [ -n "$(git status --porcelain)" ]; then
-    TIMESTAMP=$(date +%s)
-    BRANCH_NAME="qodo-ci-${BRANCH}-${TIMESTAMP}"
+# Skip git if in debug mode
+if ["$DEBUG" = "false"]; then
+    # If new changes
+    if [ -n "$(git status --porcelain)" ]; then
+        TIMESTAMP=$(date +%s)
+        BRANCH_NAME="qodo-ci-${BRANCH}-${TIMESTAMP}"
 
-    if [ ! -f "$REPORT_PATH" ]; then
-        echo "Error: Report file not found at $REPORT_PATH"
-        exit 1
+        if [ ! -f "$REPORT_PATH" ]; then
+            echo "Error: Report file not found at $REPORT_PATH"
+            exit 1
+        fi
+
+        REPORT_TEXT=$(cat "$REPORT_PATH")
+        PR_BODY=$(jinja2 "$ACTION_PATH/templates/pr_body_template.j2" -D target_branch="$BRANCH" -D report="$REPORT_TEXT")
+
+        git checkout -b "$BRANCH_NAME"
+        git add .
+        git commit -m "add tests"
+        git push origin "$BRANCH_NAME"
+        
+        gh pr create \
+            --base "$BRANCH" \
+            --head "$BRANCH_NAME" \
+            --title "Qodo Cover Update: ${TIMESTAMP}" \
+            --body "$PR_BODY"
     fi
-
-    REPORT_TEXT=$(cat "$REPORT_PATH")
-    PR_BODY=$(jinja2 "$ACTION_PATH/templates/pr_body_template.j2" -D target_branch="$BRANCH" -D report="$REPORT_TEXT")
-    
-    git checkout -b "$BRANCH_NAME"
-    git add .
-    git commit -m "add tests"
-    git push origin "$BRANCH_NAME"
-    
-    gh pr create \
-        --base "$BRANCH" \
-        --head "$BRANCH_NAME" \
-        --title "Qodo Cover Update: ${TIMESTAMP}" \
-        --body "$PR_BODY"
 fi
