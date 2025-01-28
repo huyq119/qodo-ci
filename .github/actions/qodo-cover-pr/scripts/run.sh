@@ -6,7 +6,7 @@ REPORT_DIR="/tmp"
 REPORT_PATH="$REPORT_DIR/report.txt"
 MODIFIED_FILES_JSON="/tmp/modified-files.json"
 
-DEBUG=${DEBUG:-false}
+LOCAL=${LOCAL:-false}
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -48,8 +48,8 @@ if [ "$PROJECT_LANGUAGE" == "python" ]; then
     fi
 fi
 
-# Skip git if in debug mode
-if ["$DEBUG" = "false"]; then
+# Skip git if in local mode
+if ["$LOCAL" = "false"]; then
     # Set up Git configuration
     git config --global user.email "cover-bot@qodo.ai"
     git config --global user.name "Qodo Cover"
@@ -96,27 +96,30 @@ fi
   --report-dir "$REPORT_DIR" \
   --modified-files-json "$MODIFIED_FILES_JSON"
 
-# Handle any changes made by cover-agent-pro
-if [ -n "$(git status --porcelain)" ]; then
-    TIMESTAMP=$(date +%s)
-    BRANCH_NAME="qodo-cover-${PR_NUMBER}-${TIMESTAMP}"
+# Skip git if in local mode
+if ["$LOCAL" = "false"]; then
+    # Handle any changes made by cover-agent-pro
+    if [ -n "$(git status --porcelain)" ]; then
+        TIMESTAMP=$(date +%s)
+        BRANCH_NAME="qodo-cover-${PR_NUMBER}-${TIMESTAMP}"
 
-    if [ ! -f "$REPORT_PATH" ]; then
-        echo "Error: Report file not found at $REPORT_PATH"
-        exit 1
+        if [ ! -f "$REPORT_PATH" ]; then
+            echo "Error: Report file not found at $REPORT_PATH"
+            exit 1
+        fi
+
+        REPORT_TEXT=$(cat "$REPORT_PATH")
+        PR_BODY=$(jinja2 "$ACTION_PATH/templates/pr_body_template.j2" -D pr_number="$PR_NUMBER" -D report="$REPORT_TEXT")
+        
+        git checkout -b "$BRANCH_NAME"
+        git add .
+        git commit -m "Add tests to improve coverage"
+        git push origin "$BRANCH_NAME"
+        
+        gh pr create \
+            --base "$PR_REF" \
+            --head "$BRANCH_NAME" \
+            --title "Qodo Cover Update: ${TIMESTAMP}" \
+            --body "$PR_BODY"
     fi
-
-    REPORT_TEXT=$(cat "$REPORT_PATH")
-    PR_BODY=$(jinja2 "$ACTION_PATH/templates/pr_body_template.j2" -D pr_number="$PR_NUMBER" -D report="$REPORT_TEXT")
-    
-    git checkout -b "$BRANCH_NAME"
-    git add .
-    git commit -m "Add tests to improve coverage"
-    git push origin "$BRANCH_NAME"
-    
-    gh pr create \
-        --base "$PR_REF" \
-        --head "$BRANCH_NAME" \
-        --title "Qodo Cover Update: ${TIMESTAMP}" \
-        --body "$PR_BODY"
 fi

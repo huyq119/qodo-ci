@@ -5,7 +5,7 @@ BINARY_PATH="/tmp/bin/cover-agent-pro"
 REPORT_DIR="/tmp"
 REPORT_PATH="$REPORT_DIR/report.txt"
 
-DEBUG=${DEBUG:-false}
+LOCAL=${LOCAL:-false}
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -46,8 +46,8 @@ if [ "$PROJECT_LANGUAGE" == "python" ]; then
     fi
 fi
 
-# Skip git if in debug mode
-if ["$DEBUG" = "false"]; then
+# Skip git if in local mode
+if ["$LOCAL" = "false"]; then
     # Set up Git configuration
     git config --global user.email "cover-bot@qodo.ai"
     git config --global user.name "Qodo Cover"
@@ -79,8 +79,8 @@ fi
   --run-each-test-separately "$RUN_EACH_TEST_SEPARATELY" \
   --report-dir "$REPORT_DIR"
 
-# Skip git if in debug mode
-if ["$DEBUG" = "false"]; then
+# Skip git if in local mode
+if ["$LOCAL" = "false"]; then
     # If new changes
     if [ -n "$(git status --porcelain)" ]; then
         TIMESTAMP=$(date +%s)
