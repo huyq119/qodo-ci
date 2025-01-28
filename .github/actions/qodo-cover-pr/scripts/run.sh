@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-BINARY_PATH="/tmp/bin/cover-agent-pro"
+BINARY_PATH="/usr/local/bin/cover-agent-pro"
 REPORT_DIR="/tmp"
 REPORT_PATH="$REPORT_DIR/report.txt"
 MODIFIED_FILES_JSON="/tmp/modified-files.json"
@@ -49,7 +49,7 @@ if [ "$PROJECT_LANGUAGE" == "python" ]; then
 fi
 
 # Skip git if in local mode
-if ["$LOCAL" = "false"]; then
+if [ "$LOCAL" = "false" ]; then
     # Set up Git configuration
     git config --global user.email "cover-bot@qodo.ai"
     git config --global user.name "Qodo Cover"
@@ -76,8 +76,7 @@ fi
 # Download cover-agent-pro if not already downloaded
 if [ ! -f "$BINARY_PATH" ]; then
     echo "Downloading cover-agent-pro ${ACTION_REF}..."
-    mkdir -p /tmp/bin
-    wget -q -P /tmp/bin "https://github.com/qodo-ai/qodo-ci/releases/download/${ACTION_REF}/cover-agent-pro" >/dev/null
+    wget -q -P /usr/local/bin "https://github.com/qodo-ai/qodo-ci/releases/download/${ACTION_REF}/cover-agent-pro" >/dev/null
     chmod +x "$BINARY_PATH"
 fi
 
@@ -97,7 +96,7 @@ fi
   --modified-files-json "$MODIFIED_FILES_JSON"
 
 # Skip git if in local mode
-if ["$LOCAL" = "false"]; then
+if [ "$LOCAL" = "false" ]; then
     # Handle any changes made by cover-agent-pro
     if [ -n "$(git status --porcelain)" ]; then
         TIMESTAMP=$(date +%s)

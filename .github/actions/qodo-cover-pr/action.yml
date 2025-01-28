@@ -64,5 +64,4 @@ runs:
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
         ACTION_REF: ${{ github.action_ref }}
-        <<: ${{ toJSON(env) }}
       shell: bash
