@@ -1,10 +1,11 @@
 #!/bin/bash
 set -e
 
-BINARY_PATH="/tmp/bin/cover-agent-pro"
+BINARY_PATH="/usr/local/bin/cover-agent-pro"
 REPORT_DIR="/tmp"
 REPORT_PATH="$REPORT_DIR/report.txt"
-MODIFIED_FILES_JSON="/tmp/modified-files.json"
+
+LOCAL=${LOCAL:-false}
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -19,11 +20,19 @@ while [[ "$#" -gt 0 ]]; do
         --max-iterations) MAX_ITERATIONS="$2"; shift ;;
         --desired-coverage) DESIRED_COVERAGE="$2"; shift ;;
         --run-each-test-separately) RUN_EACH_TEST_SEPARATELY="$2"; shift ;;
+        --source-folder) SOURCE_FOLDER="$2"; shift ;;
+        --test-folder) TEST_FOLDER="$2"; shift ;;
         --action-path) ACTION_PATH="$2"; shift ;;
         *) echo "Unknown parameter: $1"; exit 1 ;;
     esac
     shift
 done
+
+if [ "$LOCAL" = "false" ]; then
+    MODIFIED_FILES_JSON="/tmp/modified-files.json"
+else
+    MODIFIED_FILES_JSON="$GITHUB_WORKSPACE/$PROJECT_ROOT/modified-files.json"
+fi
 
 # Install system dependencies
 if ! (command -v wget >/dev/null && command -v sqlite3 >/dev/null && command -v jq >/dev/null); then
@@ -46,34 +55,36 @@ if [ "$PROJECT_LANGUAGE" == "python" ]; then
     fi
 fi
 
-# Set up Git configuration
-git config --global user.email "cover-bot@qodo.ai"
-git config --global user.name "Qodo Cover"
+# Skip git if in local mode
+if [ "$LOCAL" = "false" ]; then
+    # Set up Git configuration
+    git config --global user.email "cover-bot@qodo.ai"
+    git config --global user.name "Qodo Cover"
 
-# Download cover-agent-pro if not already downloaded
-if [ ! -f "$BINARY_PATH" ]; then
-    echo "Downloading cover-agent-pro ${ACTION_REF}..."
-    mkdir -p /tmp/bin
-    wget -q -P /tmp/bin "https://github.com/qodo-ai/qodo-ci/releases/download/${ACTION_REF}/cover-agent-pro" >/dev/null
-    chmod +x "$BINARY_PATH"
+    # Checkout the PR branch
+    git fetch origin "$PR_REF"
+    git checkout "$PR_REF"
+
+    # Get the repository root
+    REPO_ROOT=$(git rev-parse --show-toplevel)
+
+    # Generate the modified files JSON using gh pr view, including only added or modified files
+    echo "Generating modified files list..."
+    gh pr view "$PR_NUMBER" --json files --jq '.files[].path' | \
+    jq -R -s 'split("\n")[:-1] | map("'"$REPO_ROOT"'/" + .)' > "$MODIFIED_FILES_JSON"
 fi
-
-# Checkout the PR branch
-git fetch origin "$PR_REF"
-git checkout "$PR_REF"
-
-# Get the repository root
-REPO_ROOT=$(git rev-parse --show-toplevel)
-
-# Generate the modified files JSON using gh pr view, including only added or modified files
-echo "Generating modified files list..."
-gh pr view "$PR_NUMBER" --json files --jq '.files[].path' | \
-jq -R -s 'split("\n")[:-1] | map("'"$REPO_ROOT"'/" + .)' > "$MODIFIED_FILES_JSON"
 
 # Check if modified-files.json is empty
 if [ ! -s "$MODIFIED_FILES_JSON" ]; then
     echo "No added or modified files found in the PR. Exiting."
     exit 0
+fi
+
+# Download cover-agent-pro if not already downloaded
+if [ ! -f "$BINARY_PATH" ]; then
+    echo "Downloading cover-agent-pro ${ACTION_REF}..."
+    wget -q -P /usr/local/bin "https://github.com/qodo-ai/qodo-ci/releases/download/${ACTION_REF}/cover-agent-pro" >/dev/null
+    chmod +x "$BINARY_PATH"
 fi
 
 # Run cover-agent-pro in pr mode with the provided arguments
@@ -88,30 +99,35 @@ fi
   --max-iterations "$MAX_ITERATIONS" \
   --desired-coverage "$DESIRED_COVERAGE" \
   --run-each-test-separately "$RUN_EACH_TEST_SEPARATELY" \
+  --source-folder "$SOURCE_FOLDER" \
+  --test-folder "$TEST_FOLDER" \
   --report-dir "$REPORT_DIR" \
   --modified-files-json "$MODIFIED_FILES_JSON"
 
-# Handle any changes made by cover-agent-pro
-if [ -n "$(git status --porcelain)" ]; then
-    TIMESTAMP=$(date +%s)
-    BRANCH_NAME="qodo-cover-${PR_NUMBER}-${TIMESTAMP}"
+# Skip git if in local mode
+if [ "$LOCAL" = "false" ]; then
+    # Handle any changes made by cover-agent-pro
+    if [ -n "$(git status --porcelain)" ]; then
+        TIMESTAMP=$(date +%s)
+        BRANCH_NAME="qodo-cover-${PR_NUMBER}-${TIMESTAMP}"
 
-    if [ ! -f "$REPORT_PATH" ]; then
-        echo "Error: Report file not found at $REPORT_PATH"
-        exit 1
+        if [ ! -f "$REPORT_PATH" ]; then
+            echo "Error: Report file not found at $REPORT_PATH"
+            exit 1
+        fi
+
+        REPORT_TEXT=$(cat "$REPORT_PATH")
+        PR_BODY=$(jinja2 "$ACTION_PATH/templates/pr_body_template.j2" -D pr_number="$PR_NUMBER" -D report="$REPORT_TEXT")
+        
+        git checkout -b "$BRANCH_NAME"
+        git add .
+        git commit -m "Add tests to improve coverage"
+        git push origin "$BRANCH_NAME"
+        
+        gh pr create \
+            --base "$PR_REF" \
+            --head "$BRANCH_NAME" \
+            --title "Qodo Cover Update: ${TIMESTAMP}" \
+            --body "$PR_BODY"
     fi
-
-    REPORT_TEXT=$(cat "$REPORT_PATH")
-    PR_BODY=$(jinja2 "$ACTION_PATH/templates/pr_body_template.j2" -D pr_number="$PR_NUMBER" -D report="$REPORT_TEXT")
-    
-    git checkout -b "$BRANCH_NAME"
-    git add .
-    git commit -m "Add tests to improve coverage"
-    git push origin "$BRANCH_NAME"
-    
-    gh pr create \
-        --base "$PR_REF" \
-        --head "$BRANCH_NAME" \
-        --title "Qodo Cover Update: ${TIMESTAMP}" \
-        --body "$PR_BODY"
 fi

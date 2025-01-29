@@ -1,9 +1,11 @@
 #!/bin/bash
 set -e
 
-BINARY_PATH="/tmp/bin/cover-agent-pro"
+BINARY_PATH="/usr/local/bin/cover-agent-pro"
 REPORT_DIR="/tmp"
 REPORT_PATH="$REPORT_DIR/report.txt"
+
+LOCAL=${LOCAL:-false}
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -17,6 +19,8 @@ while [[ "$#" -gt 0 ]]; do
         --max-iterations) MAX_ITERATIONS="$2"; shift ;;
         --desired-coverage) DESIRED_COVERAGE="$2"; shift ;;
         --run-each-test-separately) RUN_EACH_TEST_SEPARATELY="$2"; shift ;;
+        --source-folder) SOURCE_FOLDER="$2"; shift ;;
+        --test-folder) TEST_FOLDER="$2"; shift ;;
         --action-path) ACTION_PATH="$2"; shift ;;
         *) echo "Unknown parameter: $1"; exit 1 ;;
     esac
@@ -44,21 +48,24 @@ if [ "$PROJECT_LANGUAGE" == "python" ]; then
     fi
 fi
 
-# Set up Git configuration
-git config --global user.email "cover-bot@qodo.ai"
-git config --global user.name "Qodo Cover"
+# Skip git if in local mode
+if [ "$LOCAL" = "false" ]; then
+    # Set up Git configuration
+    git config --global user.email "cover-bot@qodo.ai"
+    git config --global user.name "Qodo Cover"
+
+    # Checkout the specified branch
+    git fetch origin
+    git checkout "$BRANCH"  
+fi
 
 # Download cover-agent-pro if not already downloaded
 if [ ! -f "$BINARY_PATH" ]; then
     echo "Downloading cover-agent-pro ${ACTION_REF}..."
-    mkdir -p /tmp/bin
-    wget -q -P /tmp/bin "https://github.com/qodo-ai/qodo-ci/releases/download/${ACTION_REF}/cover-agent-pro" >/dev/null
+    wget -q -P /usr/local/bin "https://github.com/qodo-ai/qodo-ci/releases/download/${ACTION_REF}/cover-agent-pro" >/dev/null
     chmod +x "$BINARY_PATH"
 fi
 
-# Checkout the specified branch
-git fetch origin
-git checkout "$BRANCH"
 
 # Run cover-agent-pro
 "$BINARY_PATH" \
@@ -71,29 +78,34 @@ git checkout "$BRANCH"
   --max-iterations "$MAX_ITERATIONS" \
   --desired-coverage "$DESIRED_COVERAGE" \
   --run-each-test-separately "$RUN_EACH_TEST_SEPARATELY" \
+  --source-folder "$SOURCE_FOLDER" \
+  --test-folder "$TEST_FOLDER" \
   --report-dir "$REPORT_DIR"
 
-# If new changes
-if [ -n "$(git status --porcelain)" ]; then
-    TIMESTAMP=$(date +%s)
-    BRANCH_NAME="qodo-ci-${BRANCH}-${TIMESTAMP}"
+# Skip git if in local mode
+if [ "$LOCAL" = "false" ]; then
+    # If new changes
+    if [ -n "$(git status --porcelain)" ]; then
+        TIMESTAMP=$(date +%s)
+        BRANCH_NAME="qodo-ci-${BRANCH}-${TIMESTAMP}"
 
-    if [ ! -f "$REPORT_PATH" ]; then
-        echo "Error: Report file not found at $REPORT_PATH"
-        exit 1
+        if [ ! -f "$REPORT_PATH" ]; then
+            echo "Error: Report file not found at $REPORT_PATH"
+            exit 1
+        fi
+
+        REPORT_TEXT=$(cat "$REPORT_PATH")
+        PR_BODY=$(jinja2 "$ACTION_PATH/templates/pr_body_template.j2" -D target_branch="$BRANCH" -D report="$REPORT_TEXT")
+
+        git checkout -b "$BRANCH_NAME"
+        git add .
+        git commit -m "add tests"
+        git push origin "$BRANCH_NAME"
+        
+        gh pr create \
+            --base "$BRANCH" \
+            --head "$BRANCH_NAME" \
+            --title "Qodo Cover Update: ${TIMESTAMP}" \
+            --body "$PR_BODY"
     fi
-
-    REPORT_TEXT=$(cat "$REPORT_PATH")
-    PR_BODY=$(jinja2 "$ACTION_PATH/templates/pr_body_template.j2" -D target_branch="$BRANCH" -D report="$REPORT_TEXT")
-    
-    git checkout -b "$BRANCH_NAME"
-    git add .
-    git commit -m "add tests"
-    git push origin "$BRANCH_NAME"
-    
-    gh pr create \
-        --base "$BRANCH" \
-        --head "$BRANCH_NAME" \
-        --title "Qodo Cover Update: ${TIMESTAMP}" \
-        --body "$PR_BODY"
 fi
