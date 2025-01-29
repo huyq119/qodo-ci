@@ -41,6 +41,14 @@ inputs:
     description: "Whether the agent should modify the test command to run individual tests"
     required: false
     default: "true"
+  source_folder:
+    description: "Path, relative to project_root, to look for source files. Will ignore source files outside this folder. Defaults to `.`"
+    required: false
+    default: "."
+  test_folder:
+    description: "Path, relative to project_root, to look for test files. Will ignore test files outside this folder. Defaults to `.`"
+    required: false
+    default: "."
 
 runs:
   using: "composite"
@@ -60,6 +68,8 @@ runs:
           --max-iterations "${{ inputs.max_iterations }}" \
           --desired-coverage "${{ inputs.desired_coverage }}" \
           --run-each-test-separately "${{ inputs.run_each_test_separately }}" \
+          --source-folder "${{ inputs.source_folder }}" \
+          --test-folder "${{ inputs.test_folder }}" \
           --action-path "${{ github.action_path }}" \
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}

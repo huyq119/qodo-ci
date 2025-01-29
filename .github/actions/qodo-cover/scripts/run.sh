@@ -19,6 +19,8 @@ while [[ "$#" -gt 0 ]]; do
         --max-iterations) MAX_ITERATIONS="$2"; shift ;;
         --desired-coverage) DESIRED_COVERAGE="$2"; shift ;;
         --run-each-test-separately) RUN_EACH_TEST_SEPARATELY="$2"; shift ;;
+        --source-folder) SOURCE_FOLDER="$2"; shift ;;
+        --test-folder) TEST_FOLDER="$2"; shift ;;
         --action-path) ACTION_PATH="$2"; shift ;;
         *) echo "Unknown parameter: $1"; exit 1 ;;
     esac
@@ -76,6 +78,8 @@ fi
   --max-iterations "$MAX_ITERATIONS" \
   --desired-coverage "$DESIRED_COVERAGE" \
   --run-each-test-separately "$RUN_EACH_TEST_SEPARATELY" \
+  --source-folder "$SOURCE_FOLDER" \
+  --test-folder "$TEST_FOLDER" \
   --report-dir "$REPORT_DIR"
 
 # Skip git if in local mode
