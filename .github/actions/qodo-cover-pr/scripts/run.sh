@@ -4,7 +4,6 @@ set -e
 BINARY_PATH="/usr/local/bin/cover-agent-pro"
 REPORT_DIR="/tmp"
 REPORT_PATH="$REPORT_DIR/report.txt"
-MODIFIED_FILES_JSON="/tmp/modified-files.json"
 
 LOCAL=${LOCAL:-false}
 
@@ -28,6 +27,12 @@ while [[ "$#" -gt 0 ]]; do
     esac
     shift
 done
+
+if [ "$LOCAL" = "false" ]; then
+    MODIFIED_FILES_JSON="/tmp/modified-files.json"
+else
+    MODIFIED_FILES_JSON="$GITHUB_WORKSPACE/$PROJECT_ROOT/modified-files.json"
+fi
 
 # Install system dependencies
 if ! (command -v wget >/dev/null && command -v sqlite3 >/dev/null && command -v jq >/dev/null); then
