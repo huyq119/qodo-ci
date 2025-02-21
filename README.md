@@ -71,7 +71,7 @@ jobs:
       # ... set up your environment, e.g., install dependencies, etc.
 
       - name: qodo-cover
-        uses: qodo-ai/qodo-ci/.github/actions/qodo-cover@v0.1.5
+        uses: qodo-ai/qodo-ci/.github/actions/qodo-cover@v0.1.11
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref_name }}
@@ -145,7 +145,7 @@ jobs:
       # ... set up your environment, e.g., install dependencies, etc.
 
       - name: qodo-cover-pr
-        uses: qodo-ai/qodo-ci/.github/actions/qodo-cover-pr@v0.1.5
+        uses: qodo-ai/qodo-ci/.github/actions/qodo-cover-pr@v0.1.11
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           project_language: python
