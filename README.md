@@ -92,7 +92,7 @@ jobs:
           code_coverage_report_path: ./coverage.xml
           coverage_type: cobertura
           test_command: "pytest --cov=. --cov-report=xml --cov-report=term" # your test command
-          model: gpt-4o
+          model: gpt-4o-2024-11-20
           max_iterations: 3
           desired_coverage: 90
           run_each_test_separately: true
@@ -165,7 +165,7 @@ jobs:
           code_coverage_report_path: ./coverage.xml
           coverage_type: cobertura
           test_command: "pytest --cov=. --cov-report=xml --cov-report=term" # your test command
-          model: gpt-4o
+          model: gpt-4o-2024-11-20
           max_iterations: 3
           desired_coverage: 100
           run_each_test_separately: true
