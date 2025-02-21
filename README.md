@@ -30,13 +30,25 @@ Both actions help automatically generate and enhance test coverage using AI-powe
 * Typescript
 * *More coming soon!*
 
-## Workflow Permissions
+---
+
+## Prerequisites
+
+### Repository Permissions
 
 For Qodo Cover to work, you must explicitly allow GitHub Actions to create pull requests.  
 This setting can be found under:  
 **Settings** > **Actions** > **General** > **Workflow permissions**.
 
 Ensure **"Allow GitHub Actions to create and approve pull requests"** is enabled.
+
+![Repo Permission](media/gh-permission.png)
+
+### Repository secret
+
+Add `OPENAI_API_KEY` to your [repository secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository).
+
+**Note:** This requirement is temporary. We will enable users to issue access tokens from their Qodo Portal in a future release.
 
 ---
 
@@ -184,17 +196,13 @@ When this action runs on a pull request, it analyzes the changes in that PR, gen
 
 ---
 
-### Repository secret
-
-Add `OPENAI_API_KEY` to your [repository secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository).
-
-**Note:** This requirement is temporary. We will enable users to issue access tokens from their Qodo Portal in a future release.
-
 ## Outputs
 
 If the Qodo Cover agent succeeds in improving coverage it will comment on your PR with a link to a patch PR containing the new tests.
 
 ![Qodo Cover PR Example](media/qodo-cover-pr.png)
+
+---
 
 ## Limitations
 
@@ -202,6 +210,8 @@ If the Qodo Cover agent succeeds in improving coverage it will comment on your P
 * Will only add test cases to existing test files
 * You must provide a test command that produces coverage reports in Cobertura or Jacoco XML format (e.g. with pytest and pytest-cov)
 * You must provide your own OpenAI API key
+
+---
 
 ## Roadmap
 
