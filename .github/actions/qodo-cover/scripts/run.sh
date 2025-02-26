@@ -85,13 +85,15 @@ fi
 # Skip git if in local mode
 if [ "$LOCAL" = "false" ]; then
     # If new changes
+    echo "Checking git status..."
+    git status
     if [ -n "$(git status --porcelain)" ]; then
         TIMESTAMP=$(date +%s)
         BRANCH_NAME="qodo-ci-${BRANCH}-${TIMESTAMP}"
 
         if [ ! -f "$REPORT_PATH" ]; then
-            echo "Error: Report file not found at $REPORT_PATH"
-            exit 1
+            echo "No coverage improvements found. Exiting without creating PR."
+            exit 0
         fi
 
         REPORT_TEXT=$(cat "$REPORT_PATH")
