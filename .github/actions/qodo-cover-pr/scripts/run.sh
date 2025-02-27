@@ -22,6 +22,7 @@ while [[ "$#" -gt 0 ]]; do
         --run-each-test-separately) RUN_EACH_TEST_SEPARATELY="$2"; shift ;;
         --source-folder) SOURCE_FOLDER="$2"; shift ;;
         --test-folder) TEST_FOLDER="$2"; shift ;;
+        --additional-instructions) ADDITIONAL_INSTRUCTIONS="$2"; shift ;;
         --action-path) ACTION_PATH="$2"; shift ;;
         *) echo "Unknown parameter: $1"; exit 1 ;;
     esac
@@ -102,6 +103,7 @@ fi
   --source-folder "$SOURCE_FOLDER" \
   --test-folder "$TEST_FOLDER" \
   --report-dir "$REPORT_DIR" \
+  --additional-instructions "$ADDITIONAL_INSTRUCTIONS" \
   --modified-files-json "$MODIFIED_FILES_JSON"
 
 # Skip git if in local mode
