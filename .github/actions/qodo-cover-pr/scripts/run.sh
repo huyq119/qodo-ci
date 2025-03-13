@@ -13,6 +13,8 @@ while [[ "$#" -gt 0 ]]; do
         --pr-ref) PR_REF="$2"; shift ;;
         --project-language) PROJECT_LANGUAGE="$2"; shift ;;
         --project-root) PROJECT_ROOT="$2"; shift ;;
+        --diff-coverage) DIFF_COVERAGE="$2"; shift ;;
+        --branch) BRANCH="$2"; shift ;;
         --code-coverage-report-path) CODE_COVERAGE_REPORT_PATH="$2"; shift ;;
         --coverage-type) COVERAGE_TYPE="$2"; shift ;;
         --test-command) TEST_COMMAND="$2"; shift ;;
@@ -93,6 +95,8 @@ fi
   --mode "pr" \
   --project-language "$PROJECT_LANGUAGE" \
   --project-root "$GITHUB_WORKSPACE/$PROJECT_ROOT" \
+  --diff-coverage "$DIFF_COVERAGE" \
+  --branch "$BRANCH" \
   --code-coverage-report-path "$GITHUB_WORKSPACE/$CODE_COVERAGE_REPORT_PATH" \
   --coverage-type "$COVERAGE_TYPE" \
   --test-command "$TEST_COMMAND" \
@@ -124,7 +128,7 @@ if [ "$LOCAL" = "false" ]; then
         PR_BODY=$(jinja2 "$ACTION_PATH/templates/pr_body_template.j2" -D pr_number="$PR_NUMBER" -D report="$REPORT_TEXT")
         
         git checkout -b "$BRANCH_NAME"
-        git add .
+        git add . -e "*.json" -e "*.db" -e "*.log" -e "*.out" -e "*.xml" -e "*.html"
         git commit -m "Add tests to improve coverage"
         git push origin "$BRANCH_NAME"
         
