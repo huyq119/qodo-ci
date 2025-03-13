@@ -14,6 +14,14 @@ inputs:
     description: "Root directory of the project"
     required: false
     default: "."
+  diff_coverage:
+    description: "When true, only target coverage for lines in the diff"
+    required: false
+    default: "false"
+  branch:
+    description: "The base branch to compare to for diff_coverage"
+    required: false
+    default: "main"
   code_coverage_report_path:
     description: "Path to the coverage.xml"
     required: false
@@ -65,6 +73,8 @@ runs:
           --pr-ref "${{ github.event.pull_request.head.ref }}" \
           --project-language "${{ inputs.project_language }}" \
           --project-root "${{ inputs.project_root }}" \
+          --diff-coverage "${{ inputs.diff_coverage }}" \
+          --branch "${{ inputs.branch }}" \
           --code-coverage-report-path "${{ inputs.code_coverage_report_path }}" \
           --coverage-type "${{ inputs.coverage_type }}" \
           --test-command "${{ inputs.test_command }}" \
