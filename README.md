@@ -187,6 +187,8 @@ When this action runs on a pull request, it analyzes the changes in that PR, gen
 | `github_token`            | GitHub token for authentication                                                                                                                  | **Yes**  | N/A              |
 | `project_language`        | Language of the project                                                                                                                          | No       | `python`         |
 | `project_root`            | Root directory of the project                                                                                                                    | No       | `.`              |
+| `diff_coverage`           | When true, only target coverage for lines in the diff                                                                                            | No       | `false`              |
+| `branch`                  | The base branch to compare to for diff_coverage                                                                                                  | No       | `main`              |
 | `code_coverage_report_path` | Path to the coverage.xml (or equivalent) coverage file                                                                                        | No       | `./coverage.xml` |
 | `coverage_type`           | Type of coverage report (e.g. `cobertura`, `jacoco`)                                                                                            | No       | `cobertura`      |
 | `test_command`            | Command to run tests (must generate coverage.xml)                                                                                                | **Yes**  | N/A              |
