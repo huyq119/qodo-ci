@@ -102,7 +102,8 @@ if [ "$LOCAL" = "false" ]; then
         PR_BODY=$(jinja2 "$ACTION_PATH/templates/pr_body_template.j2" -D target_branch="$BRANCH" -D report="$REPORT_TEXT")
 
         git checkout -b "$BRANCH_NAME"
-        git add . -e "*.json" -e "*.db" -e "*.log" -e "*.out" -e "*.xml" -e "*.html"
+        git add .
+        git reset -- "*.json" "*.db" "*.log" "*.out" "*.xml" "*.html"
         git commit -m "add tests"
         git push origin "$BRANCH_NAME"
         
