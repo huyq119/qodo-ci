@@ -66,6 +66,13 @@ if [ "$LOCAL" = "false" ]; then
 
     # Checkout the PR branch
     git fetch origin "$PR_REF"
+    
+    # Fetch the branch if DIFF_COVERAGE is not false
+    if [ "$DIFF_COVERAGE" != "false" ]; then
+        echo "Fetching branch $BRANCH for diff coverage comparison..."
+        git fetch origin "$BRANCH:$BRANCH"
+    fi
+    
     git checkout "$PR_REF"
 
     # Get the repository root
